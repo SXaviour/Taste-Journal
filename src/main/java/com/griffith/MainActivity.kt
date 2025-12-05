@@ -1,11 +1,16 @@
+// https://github.com/SXaviour/Taste-Journal
 package com.griffith
 
-
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -13,15 +18,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.griffith.data.AppDatabase
 import com.griffith.data.Dish
 import com.griffith.data.DishRepository
@@ -32,52 +34,119 @@ import com.griffith.ui.theme.TasteTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.sqrt
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), SensorEventListener {
+
+    private lateinit var sensorManager: SensorManager
+    private var accelCurrent = SensorManager.GRAVITY_EARTH
+    private var accelLast = SensorManager.GRAVITY_EARTH
+    private var shake = 0f
+    private var lastShakeTime = 0L
+    private val repo by lazy { DishRepository(AppDatabase.get(applicationContext).dishDao()) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { TasteTheme(dark = false) { HomeScaffold() } }
+
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+
+        setContent {
+            TasteTheme(dark = true) {
+                HomeScaffold()
+            }
+        }
     }
+
+    override fun onResume() {
+        super.onResume()
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
+
+        val x = event.values[0]
+        val y = event.values[1]
+        val z = event.values[2]
+
+        accelLast = accelCurrent
+        accelCurrent = sqrt((x * x + y * y + z * z).toDouble()).toFloat()
+        val delta = accelCurrent - accelLast
+        shake = shake * 0.9f + delta
+
+        if (shake > 12f) {
+            val now = System.currentTimeMillis()
+            if (now - lastShakeTime > 1000L) {
+                lastShakeTime = now
+                onShake()
+            }
+        }
+    }
+
+    private fun onShake() {
+        val intent = Intent(this, ShuffleActivity::class.java)
+        startActivity(intent)
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScaffold(vm: HomeVM = viewModel()) {
-    var tab by remember { mutableStateOf(0) }  // 0=Home, 1=Timeline
+    var tab by remember { mutableStateOf(0) }
     var query by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(title = {
                 Row {
-                    Text(if (tab==0) "Home" else "Timeline")
-                    Spacer(Modifier.width(8.dp))
+                    Text(if (tab == 0) "Home" else "Timeline")
                 }
             })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { vm.launchAdd() }, containerColor = MaterialTheme.colorScheme.primary) {
+            FloatingActionButton(
+                onClick = { vm.launchAdd() },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
                 Text("+")
             }
         },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    selected = tab==0, onClick = { tab=0 },
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) }, label = { Text("Home") }
+                    selected = tab == 0,
+                    onClick = { tab = 0 },
+                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                    label = { Text("Home") }
                 )
                 NavigationBarItem(
-                    selected = tab==1, onClick = { tab=1 },
-                    icon = { Text("⚡") }, label = { Text("Timeline") }
+                    selected = tab == 1,
+                    onClick = { tab = 1 },
+                    icon = { Text("⚡") },
+                    label = { Text("Timeline") }
                 )
                 NavigationBarItem(
-                    selected = false, onClick = { /* profile placeholder */ },
-                    icon = { Text("👤") }, label = { Text("") }
+                    selected = false,
+                    onClick = { },
+                    icon = { Text("👤") },
+                    label = { Text("Profile") }
                 )
             }
         }
     ) { pad ->
-        if (tab==0) HomeContent(pad, vm, query, onQuery = { query = it })
+        if (tab == 0) HomeContent(pad, vm, query, onQuery = { query = it })
         else TimelineContent(pad, vm)
     }
 }
@@ -91,17 +160,18 @@ private fun HomeContent(
 ) {
     val dishes by vm.all.collectAsState(emptyList())
 
-    Column(Modifier.padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SearchBar(query, onQuery, onSearch = { /* optional filter state */ }, onFilter = { /* filter sheet */ })
-
+    Column(
+        Modifier.padding(pad).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SearchBar(query, onQuery, onSearch = { }, onFilter = { })
         Text("Meal Categories", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            MealCategoryCircle("Breakfast"){}
-            MealCategoryCircle("Lunch"){}
-            MealCategoryCircle("Dinner"){}
-            MealCategoryCircle("Nigerian"){}
+            MealCategoryCircle("Breakfast") { }
+            MealCategoryCircle("Lunch") { }
+            MealCategoryCircle("Dinner") { }
+            MealCategoryCircle("Nigerian") { }
         }
-
         Text("Your Recipes", style = MaterialTheme.typography.titleMedium)
         LazyVerticalGrid(
             columns = GridCells.Adaptive(170.dp),
@@ -119,7 +189,10 @@ private fun TimelineContent(pad: PaddingValues, vm: HomeVM) {
     val favs by vm.forgotten.collectAsState(emptyList())
     val top by vm.top.collectAsState(emptyList())
 
-    Column(Modifier.padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        Modifier.padding(pad).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Section("Recently Cooked", recent) { vm.launchDetails(it.id) }
         Section("Forgotten Favorites", favs) { vm.launchDetails(it.id) }
         Section("Top Rated", top) { vm.launchDetails(it.id) }
@@ -129,7 +202,7 @@ private fun TimelineContent(pad: PaddingValues, vm: HomeVM) {
 @Composable
 private fun Section(title: String, data: List<Dish>, onOpen: (Dish) -> Unit) {
     Text(title, style = MaterialTheme.typography.titleMedium)
-    androidx.compose.foundation.lazy.LazyRow {
+    LazyRow {
         items(data.size) { i ->
             RecipeCard(data[i]) { onOpen(it) }
         }
@@ -144,18 +217,28 @@ class HomeVM : ViewModel() {
 
     val recent = repo.recent(10)
     val top = repo.top(10)
-    val forgotten = repo.forgotten(4, System.currentTimeMillis() - 60L*24*60*60*1000, 10)
+    val forgotten = repo.forgotten(4, System.currentTimeMillis() - 60L * 24 * 60 * 60 * 1000, 10)
 
     init {
-        viewModelScope.launch { repo.all().collect { _all.value = it } }
+        viewModelScope.launch {
+            repo.all().collect { _all.value = it }
+        }
     }
 
     fun launchAdd() {
         val ctx = App.app
-        ctx.startActivity(Intent(ctx, AddDishActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        ctx.startActivity(
+            Intent(ctx, AddDishActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
+
     fun launchDetails(id: Long) {
         val ctx = App.app
-        ctx.startActivity(Intent(ctx, DetailsActivity::class.java).putExtra("id", id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        ctx.startActivity(
+            Intent(ctx, DetailsActivity::class.java)
+                .putExtra("id", id)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 }

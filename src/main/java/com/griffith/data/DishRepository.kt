@@ -8,4 +8,7 @@ class DishRepository(private val dao: DishDao) {
     fun recent(n: Int) = dao.recent(n)
     fun forgotten(min: Int, cutoff: Long, n: Int) = dao.forgotten(min, cutoff, n)
     fun top(n: Int) = dao.top(n)
+
+    suspend fun random() = dao.random()
+
 }

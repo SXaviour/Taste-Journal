@@ -24,4 +24,7 @@ interface DishDao {
 
     @Query("SELECT * FROM dishes ORDER BY rating DESC, dateCooked DESC LIMIT :n")
     fun top(n: Int): Flow<List<Dish>>
+
+    @Query("SELECT * FROM dishes ORDER BY RANDOM() LIMIT 1")
+    suspend fun random(): Dish?
 }

@@ -31,7 +31,7 @@ fun RecipeCard(d: Dish, onClick: (Dish) -> Unit) {
             modifier = Modifier.fillMaxWidth().height(160.dp)
         )
 
-        // Top-right rating as ⚡⚡⚡
+      // Rating
         Row(Modifier.align(androidx.compose.ui.Alignment.TopEnd).padding(8.dp)) {
             repeat(d.rating ?: 0) { Text("⚡") }
         }

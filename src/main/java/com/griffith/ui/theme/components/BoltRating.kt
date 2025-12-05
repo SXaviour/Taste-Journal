@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 fun BoltRating(current: Int?, onSet: (Int) -> Unit) {
     Row {
         (1..5).forEach { n ->
+            // Using emojis
             Text(text = if ((current ?: 0) >= n) "⚡" else "⚪",
                 modifier = androidx.compose.ui.Modifier.clickable { onSet(n) })
         }

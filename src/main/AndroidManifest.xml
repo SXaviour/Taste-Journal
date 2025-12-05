@@ -13,15 +13,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TasteJournal">
 
-        <!-- Details screen (explicit intent target) -->
+
         <activity
             android:name=".DetailsActivity"
             android:exported="false" />
 
-        <!-- Add Dish screen (explicit intent target) -->
+
         <activity
             android:name=".AddDishActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ShuffleActivity"
+            android:exported="false" />
+
 
         <activity
             android:name=".MainActivity"

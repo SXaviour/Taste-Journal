@@ -1,6 +1,8 @@
+// https://github.com/SXaviour/Taste-Journal
 package com.griffith
 
 import android.os.Bundle
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,12 +12,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.griffith.data.AppDatabase
 import com.griffith.data.Dish
 import com.griffith.data.DishRepository
 import com.griffith.ui.theme.components.BoltRating
 import com.griffith.ui.theme.TasteTheme
+import com.griffith.util.saveImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,7 +27,7 @@ import kotlinx.coroutines.launch
 class AddDishActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { TasteTheme(dark = false) { AddDishUI() } }
+        setContent { TasteTheme(dark = true) { AddDishUI() } }
     }
 }
 
@@ -31,6 +35,7 @@ class AddDishActivity : ComponentActivity() {
 @Composable
 fun AddDishUI() {
     val repo = remember { DishRepository(AppDatabase.get(App.app).dishDao()) }
+    val ctx = LocalContext.current
 
     var name by remember { mutableStateOf("") }
     var kcal by remember { mutableStateOf("") }
@@ -41,12 +46,17 @@ fun AddDishUI() {
     var imageUri by remember { mutableStateOf<String?>(null) }
     var rating by remember { mutableStateOf<Int?>(null) }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
         imageUri = uri?.toString()
     }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Add Dish") }) }) { pad ->
-        Column(Modifier.padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            Modifier.padding(pad).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             OutlinedTextField(name, { name = it }, label = { Text("Dish name") }, modifier = Modifier.fillMaxWidth())
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(kcal, { kcal = it }, label = { Text("kcal") }, modifier = Modifier.weight(1f))
@@ -62,27 +72,40 @@ fun AddDishUI() {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = {
                     picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }) { Text("Pick photo") }
+                }) {
+                    Text("Pick photo")
+                }
 
-                Button(enabled = name.isNotBlank(), onClick = {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        repo.save(
-                            Dish(
-                                dishName = name.trim(),
-                                kcal = kcal.toIntOrNull(),
-                                cookMinutes = mins.toIntOrNull(),
-                                ingredients = ingredients.trim(),
-                                steps = steps.trim(),
-                                sourceLink = link.ifBlank { null },
-                                imageUri = imageUri,
-                                rating = rating
+                Button(
+                    enabled = name.isNotBlank(),
+                    onClick = {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val stableUri = imageUri?.let { raw ->
+                                saveImage(ctx, Uri.parse(raw))
+                            }
+                            repo.save(
+                                Dish(
+                                    dishName = name.trim(),
+                                    kcal = kcal.toIntOrNull(),
+                                    cookMinutes = mins.toIntOrNull(),
+                                    ingredients = ingredients.trim(),
+                                    steps = steps.trim(),
+                                    sourceLink = link.ifBlank { null },
+                                    imageUri = stableUri,
+                                    rating = rating
+                                )
                             )
+                        }
+
+
+                        App.app.startActivity(
+                            android.content.Intent(App.app, MainActivity::class.java)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     }
-                    // finish back to Home
-                    (App.app).startActivity(android.content.Intent(App.app, MainActivity::class.java)
-                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
-                }) { Text("Save") }
+                ) {
+                    Text("Save")
+                }
             }
         }
     }

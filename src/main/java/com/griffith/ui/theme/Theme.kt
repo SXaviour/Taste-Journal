@@ -4,7 +4,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// Close to your screenshots (cream + terracotta, dark charcoal)
+
 val Cream = Color(0xFFFAF7F2)
 val Charcoal = Color(0xFF2A2A2A)
 val Terracotta = Color(0xFFE36A3E)
@@ -30,6 +30,6 @@ private val DarkColors = darkColorScheme(
 )
 
 @Composable
-fun TasteTheme(dark: Boolean, content: @Composable () -> Unit) {
+fun TasteTheme(dark: Boolean = true, content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, content = content)
 }

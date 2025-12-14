@@ -37,6 +37,8 @@ import com.griffith.ui.theme.TasteTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+
+// removed hard coded colors
 class DetailsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,12 +57,12 @@ fun DetailsScreen(id: Long) {
     val scope = rememberCoroutineScope()
     var dish by remember { mutableStateOf<Dish?>(null) }
 
+    // Observe dish from database
     LaunchedEffect(id) {
         repo.byId(id).collectLatest { dish = it }
     }
 
     val d = dish ?: return
-
     val ctx = LocalContext.current
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -95,10 +97,7 @@ fun DetailsScreen(id: Long) {
                     overflow = TextOverflow.Ellipsis
                 )
 
-                val subtitle = listOfNotNull(
-                    d.mealType,
-                    d.cuisine
-                ).joinToString(" | ")
+                val subtitle = listOfNotNull(d.mealType, d.cuisine).joinToString(" | ")
                 if (subtitle.isNotBlank()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -120,8 +119,9 @@ fun DetailsScreen(id: Long) {
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
-                                ctx.startActivity(intent)
+                                ctx.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                                )
                             }
                     )
                 }
@@ -133,7 +133,6 @@ fun DetailsScreen(id: Long) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     StatCard(
-                        // Using emojis now, icons in future updates
                         icon = "🔥",
                         label = "${d.kcal ?: 0} Kcal",
                         modifier = Modifier.weight(1f)
@@ -147,7 +146,6 @@ fun DetailsScreen(id: Long) {
                     )
                 }
 
-
                 Spacer(Modifier.height(12.dp))
 
                 Row(
@@ -157,12 +155,14 @@ fun DetailsScreen(id: Long) {
                 ) {
                     d.sourceLink?.let { link ->
                         TextButton(onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
-                            ctx.startActivity(intent)
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                            )
                         }) {
                             Text("Open source")
                         }
                     }
+
                     TextButton(onClick = {
                         val text = buildString {
                             appendLine(d.dishName)
@@ -174,16 +174,23 @@ fun DetailsScreen(id: Long) {
                             appendLine("Instructions:")
                             appendLine(d.steps)
                         }
-                        val share = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, text)
-                        }
-                        ctx.startActivity(Intent.createChooser(share, "Share recipe"))
+                        ctx.startActivity(
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, text)
+                                },
+                                "Share recipe"
+                            )
+                        )
                     }) {
                         Text("Share")
                     }
+
                     Spacer(Modifier.weight(1f))
-                    val activity = ctx as? androidx.activity.ComponentActivity
+
+                    // Delete dish from database
+                    val activity = ctx as? ComponentActivity
                     Button(
                         onClick = {
                             scope.launch {
@@ -192,21 +199,21 @@ fun DetailsScreen(id: Long) {
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFB3261E),
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
                         )
                     ) {
                         Text("Delete")
                     }
-
-
                 }
-                Spacer(Modifier.height(12  .dp))
+
+                Spacer(Modifier.height(12.dp))
+
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFF2A2A2A))
+                        .background(MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
                         Modifier
@@ -214,24 +221,9 @@ fun DetailsScreen(id: Long) {
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        TabChip(
-                            title = "Ingredients",
-                            selected = selectedTab == 0,
-                            onClick = { selectedTab = 0 },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TabChip(
-                            title = "Instructions",
-                            selected = selectedTab == 1,
-                            onClick = { selectedTab = 1 },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TabChip(
-                            title = "Notes",
-                            selected = selectedTab == 2,
-                            onClick = { selectedTab = 2 },
-                            modifier = Modifier.weight(1f)
-                        )
+                        TabChip("Ingredients", selectedTab == 0) { selectedTab = 0 }
+                        TabChip("Instructions", selectedTab == 1) { selectedTab = 1 }
+                        TabChip("Notes", selectedTab == 2) { selectedTab = 2 }
                     }
                 }
 
@@ -240,9 +232,9 @@ fun DetailsScreen(id: Long) {
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .weight(1f, fill = true)
+                        .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF323232))
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(16.dp)
                 ) {
                     when (selectedTab) {
@@ -261,7 +253,7 @@ private fun StatCard(icon: String, label: String, modifier: Modifier = Modifier)
     Column(
         modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A2A2A))
+            .background(MaterialTheme.colorScheme.surface)
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -270,29 +262,31 @@ private fun StatCard(icon: String, label: String, modifier: Modifier = Modifier)
         Text(
             label,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
 
-
 @Composable
-private fun TabChip(title: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
+private fun TabChip(title: String, selected: Boolean, onClick: () -> Unit) {
     Box(
-        modifier
+        Modifier
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (selected) MaterialTheme.colorScheme.primary
                 else Color.Transparent
             )
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp, horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             title,
             style = MaterialTheme.typography.bodySmall,
-            color = if (selected) Color.White else Color.LightGray
+            color = if (selected)
+                MaterialTheme.colorScheme.onPrimary
+            else
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
     }
 }
@@ -300,19 +294,14 @@ private fun TabChip(title: String, selected: Boolean, onClick: () -> Unit, modif
 @Composable
 private fun IngredientsList(raw: String) {
     val items = raw.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         items(items) { line ->
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Text("• ", color = Color.White)
+            Row {
+                Text("• ", color = MaterialTheme.colorScheme.onSurface)
                 Text(
                     line,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -321,20 +310,19 @@ private fun IngredientsList(raw: String) {
 
 @Composable
 private fun InstructionsText(raw: String) {
-    val text = raw.ifBlank { "No instructions added yet." }
     Text(
-        text,
+        raw.ifBlank { "No instructions added yet." },
         style = MaterialTheme.typography.bodyMedium,
-        color = Color.White
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
 
 @Composable
 private fun NotesText(raw: String?) {
-    val text = raw?.takeIf { it.isNotBlank() } ?: "No notes added yet."
     Text(
-        text,
+        raw?.takeIf { it.isNotBlank() } ?: "No notes added yet.",
         style = MaterialTheme.typography.bodyMedium,
-        color = Color.White
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
+

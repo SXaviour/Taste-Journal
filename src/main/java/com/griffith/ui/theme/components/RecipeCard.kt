@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -28,41 +29,73 @@ fun RecipeCard(d: Dish, onClick: (Dish) -> Unit) {
             model = d.imageUri,
             contentDescription = d.dishName,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().height(160.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
         )
 
-      // Rating
-        Row(Modifier.align(androidx.compose.ui.Alignment.TopEnd).padding(8.dp)) {
-            repeat(d.rating ?: 0) { Text("⚡") }
+        // Rating shown top-right
+        Row(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            repeat(d.rating ?: 0) {
+                Text("⚡")
+            }
         }
 
-        // Bottom gradient + text pills
+        // Gradient overlay for text readability
         Box(
-            Modifier.align(androidx.compose.ui.Alignment.BottomStart)
-                .fillMaxWidth().height(64.dp)
+            Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .height(64.dp)
                 .background(
-                    Brush.verticalGradient(listOf(Color.Transparent, Color(0xAA000000)))
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.85f)
+                        )
+                    )
                 )
         )
-        Column(Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(10.dp)) {
-            Text(d.dishName, color = Color.White, style = MaterialTheme.typography.titleSmall,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+
+        Column(
+            Modifier
+                .align(Alignment.BottomStart)
+                .padding(10.dp)
+        ) {
+            Text(
+                d.dishName,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Pill(text = d.kcal?.let { "$it kcal" } ?: "— kcal")
-                val time = d.cookMinutes?.let { if (it < 60) "$it mins" else "${it/60} hr ${it%60} mins" } ?: "— mins"
-                Pill(text = time)
+                Pill(d.kcal?.let { "$it kcal" } ?: "— kcal")
+                val time = d.cookMinutes?.let {
+                    if (it < 60) "$it mins" else "${it / 60} hr ${it % 60} mins"
+                } ?: "— mins"
+                Pill(time)
             }
         }
     }
 }
 
-@Composable private fun Pill(text: String) {
+@Composable
+private fun Pill(text: String) {
     Text(
         text,
-        color = Color.White,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
-            .background(Color(0x33000000), RoundedCornerShape(12.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        style = MaterialTheme.typography.labelSmall
+            .background(
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     )
 }

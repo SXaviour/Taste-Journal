@@ -48,6 +48,7 @@ fun ShuffleScreen() {
         iterations = LottieConstants.IterateForever
     )
 
+    // Pick random dish after short delay
     LaunchedEffect(Unit) {
         val dish = repo.random()
         if (dish != null) {
@@ -74,7 +75,8 @@ fun ShuffleScreen() {
                 .fillMaxWidth(0.7f)
                 .aspectRatio(1f),
             shape = RoundedCornerShape(24.dp),
-            color = Color(0xFF1E1E1E)
+            // removed hard coded colors
+            color = MaterialTheme.colorScheme.surface
         ) {
             Box(
                 Modifier.fillMaxSize(),
@@ -87,9 +89,14 @@ fun ShuffleScreen() {
                         modifier = Modifier.fillMaxSize(0.8f)
                     )
                 } else {
-                    Text("Shuffling...", color = Color.White)
+                    Text(
+                        "Shuffling...",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         }
     }
 }
+
+

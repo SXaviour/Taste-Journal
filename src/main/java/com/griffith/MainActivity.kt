@@ -147,7 +147,7 @@ private fun HomeScaffold(vm: HomeVM = viewModel()) {
         }
     ) { pad ->
         if (tab == 0) HomeContent(pad, vm, query, onQuery = { query = it })
-        else TimelineContent(pad, vm)
+        else com.griffith.TimelineScreen(pad, vm)
     }
 }
 
@@ -183,21 +183,7 @@ private fun HomeContent(
     }
 }
 
-@Composable
-private fun TimelineContent(pad: PaddingValues, vm: HomeVM) {
-    val recent by vm.recent.collectAsState(emptyList())
-    val favs by vm.forgotten.collectAsState(emptyList())
-    val top by vm.top.collectAsState(emptyList())
 
-    Column(
-        Modifier.padding(pad).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Section("Recently Cooked", recent) { vm.launchDetails(it.id) }
-        Section("Forgotten Favorites", favs) { vm.launchDetails(it.id) }
-        Section("Top Rated", top) { vm.launchDetails(it.id) }
-    }
-}
 
 @Composable
 private fun Section(title: String, data: List<Dish>, onOpen: (Dish) -> Unit) {

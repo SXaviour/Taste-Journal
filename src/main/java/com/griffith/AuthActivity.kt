@@ -85,15 +85,15 @@ fun AuthScreen() {
                 .padding(horizontal = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(480.dp))
+            Spacer(Modifier.height(483.dp))
 
             Text(
                 if (isLogin) "Welcome back" else "Welcome",
                 color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
             )
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(15.dp))
 
             if (!isLogin) {
                 AuthField(

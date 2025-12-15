@@ -5,9 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Dish::class], version = 1)
+@Database(entities = [Dish::class, User::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dishDao(): DishDao
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
@@ -18,7 +19,8 @@ abstract class AppDatabase : RoomDatabase() {
                     ctx.applicationContext,
                     AppDatabase::class.java,
                     "taste_journal.db"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

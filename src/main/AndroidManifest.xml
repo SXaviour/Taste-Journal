@@ -27,6 +27,12 @@
             android:name=".ShuffleActivity"
             android:exported="false" />
 
+
+        <activity
+            android:name=".AuthActivity"
+            android:exported="false" />
+
+
         <activity
             android:name=".WelcomeActivity"
             android:exported="true">

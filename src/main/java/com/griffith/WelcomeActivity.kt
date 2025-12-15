@@ -30,9 +30,17 @@ class WelcomeActivity : ComponentActivity() {
         setContent {
             TasteTheme {
                 WelcomeScreen(
-                    onPrimary = {
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
+                    // routing to auth activity
+                    onGetStarted = {
+                        startActivity(
+                            Intent(this, AuthActivity::class.java)
+                                .putExtra("mode", "register")
+                        )
+                    },
+                            onLogin = {
+                                startActivity(
+                                    Intent(this, AuthActivity::class.java)
+                                        .putExtra("mode", "login"))
                     }
                 )
             }
@@ -41,7 +49,10 @@ class WelcomeActivity : ComponentActivity() {
 }
 
 @Composable
-fun WelcomeScreen(onPrimary: () -> Unit) {
+fun WelcomeScreen(
+    onGetStarted: () -> Unit,
+    onLogin: () -> Unit
+) {
     val pager = rememberPagerState(initialPage = 0) { 2 }
 
     Box(Modifier.fillMaxSize()) {
@@ -105,7 +116,9 @@ fun WelcomeScreen(onPrimary: () -> Unit) {
             Spacer(Modifier.height(22.dp))
 
             Button(
-                onClick = onPrimary,
+                onClick = {
+                    if (pager.currentPage == 0) onGetStarted() else onLogin()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp),

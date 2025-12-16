@@ -1,6 +1,7 @@
 package com.griffith
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,11 +9,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.outlined.SupportAgent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,15 +25,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.griffith.AuthActivity
-import com.griffith.ChangePasswordActivity
-import com.griffith.R
-import com.griffith.WelcomeActivity
 import com.griffith.data.AppDatabase
 import com.griffith.data.DishRepository
 import com.griffith.data.User
@@ -44,14 +43,18 @@ fun ProfileScreen(pad: PaddingValues) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // db
     val db = remember { AppDatabase.get(ctx) }
     val userDao = remember { db.userDao() }
     val repo = remember { DishRepository(db.dishDao()) }
 
     var user by remember { mutableStateOf<User?>(null) }
+
+    // dialogs toggles
     var showClearDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
+    // load user once
     LaunchedEffect(Unit) {
         val id = Session.userId(ctx)
         if (id != 0L) {
@@ -67,12 +70,8 @@ fun ProfileScreen(pad: PaddingValues) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            "Profile",
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onBackground
-        )
 
+        // top profile card
         Surface(
             shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surface,
@@ -93,6 +92,7 @@ fun ProfileScreen(pad: PaddingValues) {
 
                 Spacer(Modifier.width(12.dp))
 
+                // user details
                 Column(Modifier.weight(1f)) {
                     Text(
                         user?.name ?: "User",
@@ -106,6 +106,7 @@ fun ProfileScreen(pad: PaddingValues) {
                     )
                 }
 
+                // edit icon inactive for now
                 Icon(
                     imageVector = Icons.Outlined.Edit,
                     contentDescription = null,
@@ -115,6 +116,17 @@ fun ProfileScreen(pad: PaddingValues) {
             }
         }
 
+
+        ReviewCard {
+            // linked to playstore
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/games?hl=en")
+            )
+            ctx.startActivity(intent)
+        }
+
+        // banner image card
         Surface(
             shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surface,
@@ -126,21 +138,32 @@ fun ProfileScreen(pad: PaddingValues) {
                 painter = painterResource(id = R.drawable.profile_banner),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-
+                modifier = Modifier.fillMaxSize()
             )
         }
 
+        // settings box
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier
-                .fillMaxWidth()
-
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(vertical = 6.dp)) {
 
+                // open custom app site built for this project
+                SettingRow(
+                    icon = Icons.Outlined.SupportAgent,
+                    title = "Contact Us",
+                    titleColor = MaterialTheme.colorScheme.onSurface
+                ) {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://sxaviour.github.io/Contact-Us-site-taste-journal/")
+                    )
+                    ctx.startActivity(intent)
+                }
+
+                // change password screen
                 SettingRow(
                     icon = Icons.Outlined.Lock,
                     title = "Change Password",
@@ -149,6 +172,7 @@ fun ProfileScreen(pad: PaddingValues) {
                     ctx.startActivity(Intent(ctx, ChangePasswordActivity::class.java))
                 }
 
+                // wipe dishes table
                 SettingRow(
                     icon = Icons.Outlined.DeleteOutline,
                     title = "Clear Cooking History",
@@ -157,8 +181,9 @@ fun ProfileScreen(pad: PaddingValues) {
                     showClearDialog = true
                 }
 
+                // logout and clear session
                 SettingRow(
-                    icon = Icons.Outlined.Logout,
+                    icon = Icons.AutoMirrored.Outlined.Logout,
                     title = "Log Out",
                     titleColor = MaterialTheme.colorScheme.error
                 ) {
@@ -168,6 +193,7 @@ fun ProfileScreen(pad: PaddingValues) {
         }
     }
 
+    // clear history dialog
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
@@ -185,6 +211,7 @@ fun ProfileScreen(pad: PaddingValues) {
         )
     }
 
+    // logout dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -208,8 +235,62 @@ fun ProfileScreen(pad: PaddingValues) {
 }
 
 @Composable
+private fun ReviewCard(onClick: () -> Unit) {
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Leave us a Review",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    repeat(5) {
+                        Text(
+                            "☆",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SettingRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     titleColor: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit

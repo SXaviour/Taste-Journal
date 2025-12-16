@@ -111,16 +111,18 @@ private fun HomeScaffold(vm: HomeVM = viewModel()) {
         topBar = {
             TopAppBar(title = {
                 Row {
-                    Text(if (tab == 0) "Home" else "Timeline")
+                    Text(if (tab == 0) "Home" else if (tab == 1) "Timeline" else "Profile")
                 }
             })
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { vm.launchAdd() },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 Text("+")
+
             }
         },
         bottomBar = {

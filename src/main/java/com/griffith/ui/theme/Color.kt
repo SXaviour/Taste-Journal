@@ -7,6 +7,6 @@ val DarkSurface = Color(0xFF1E1E1E)
 val DarkCard = Color(0xFF2A2A2A)
 
 val Accent = Color(0xFFFD4F22)
-
+val Error = Color(0xFFDC2626)
 val TextPrimary = Color(0xFFEDEDED)
 val TextSecondary = Color(0xFFBDBDBD)

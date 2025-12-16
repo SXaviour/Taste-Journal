@@ -10,6 +10,7 @@ private val DarkColors = darkColorScheme(
     background = DarkBackground,
     surface = DarkSurface,
     primary = Accent,
+    error = Error,
     onBackground = TextPrimary,
     onSurface = TextPrimary
 )

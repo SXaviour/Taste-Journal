@@ -9,6 +9,10 @@ interface DishDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsert(d: Dish): Long
     @Delete suspend fun delete(d: Dish)
 
+    @Query("DELETE FROM dishes")
+    suspend fun clear()
+
+
     @Query("SELECT * FROM dishes ORDER BY dateCooked DESC")
     fun all(): Flow<List<Dish>>
 

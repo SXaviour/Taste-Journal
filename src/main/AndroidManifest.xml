@@ -34,6 +34,11 @@
 
 
         <activity
+            android:name=".ChangePasswordActivity"
+            android:exported="false" />
+
+
+        <activity
             android:name=".WelcomeActivity"
             android:exported="true">
             <intent-filter>

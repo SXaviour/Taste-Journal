@@ -27,26 +27,34 @@ import com.griffith.ui.theme.TasteTheme
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (com.griffith.util.Session.userId(this) != 0L) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
         setContent {
             TasteTheme {
                 WelcomeScreen(
-                    // routing to auth activity
                     onGetStarted = {
                         startActivity(
                             Intent(this, AuthActivity::class.java)
                                 .putExtra("mode", "register")
                         )
                     },
-                            onLogin = {
-                                startActivity(
-                                    Intent(this, AuthActivity::class.java)
-                                        .putExtra("mode", "login"))
+                    onLogin = {
+                        startActivity(
+                            Intent(this, AuthActivity::class.java)
+                                .putExtra("mode", "login")
+                        )
                     }
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun WelcomeScreen(

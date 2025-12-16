@@ -138,16 +138,20 @@ private fun HomeScaffold(vm: HomeVM = viewModel()) {
                     label = { Text("Timeline") }
                 )
                 NavigationBarItem(
-                    selected = false,
-                    onClick = { },
+                    selected = tab == 2,
+                    onClick = { tab = 2},
                     icon = { Text("👤") },
                     label = { Text("Profile") }
                 )
             }
         }
+        // I replaced if statement with when statement to hook profile
     ) { pad ->
-        if (tab == 0) HomeContent(pad, vm, query, onQuery = { query = it })
-        else com.griffith.TimelineScreen(pad, vm)
+        when (tab) {
+            0 -> HomeContent(pad, vm, query, onQuery = { query = it })
+            1 -> com.griffith.TimelineScreen(pad, vm)
+            2 -> com.griffith.ProfileScreen(pad)
+        }
     }
 }
 

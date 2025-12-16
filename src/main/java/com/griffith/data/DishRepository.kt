@@ -10,5 +10,7 @@ class DishRepository(private val dao: DishDao) {
     fun top(n: Int) = dao.top(n)
 
     suspend fun random() = dao.random()
+    suspend fun clear() = dao.clear()
+
 
 }

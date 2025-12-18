@@ -50,11 +50,11 @@ fun ProfileScreen(pad: PaddingValues) {
 
     var user by remember { mutableStateOf<User?>(null) }
 
-    // dialogs toggles
+
     var showClearDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    // load user once
+
     LaunchedEffect(Unit) {
         val id = Session.userId(ctx)
         if (id != 0L) {
@@ -71,7 +71,7 @@ fun ProfileScreen(pad: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // top profile card
+
         Surface(
             shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surface,
@@ -126,7 +126,7 @@ fun ProfileScreen(pad: PaddingValues) {
             ctx.startActivity(intent)
         }
 
-        // banner image card
+
         Surface(
             shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surface,
@@ -142,7 +142,7 @@ fun ProfileScreen(pad: PaddingValues) {
             )
         }
 
-        // settings box
+
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
@@ -163,7 +163,7 @@ fun ProfileScreen(pad: PaddingValues) {
                     ctx.startActivity(intent)
                 }
 
-                // change password screen
+
                 SettingRow(
                     icon = Icons.Outlined.Lock,
                     title = "Change Password",
@@ -172,7 +172,7 @@ fun ProfileScreen(pad: PaddingValues) {
                     ctx.startActivity(Intent(ctx, ChangePasswordActivity::class.java))
                 }
 
-                // wipe dishes table
+
                 SettingRow(
                     icon = Icons.Outlined.DeleteOutline,
                     title = "Clear Cooking History",
@@ -211,7 +211,7 @@ fun ProfileScreen(pad: PaddingValues) {
         )
     }
 
-    // logout dialog
+
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },

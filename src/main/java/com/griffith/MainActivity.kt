@@ -33,6 +33,7 @@ import com.griffith.ui.theme.components.SearchBar
 import com.griffith.ui.theme.TasteTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
@@ -150,27 +151,39 @@ private fun HomeScaffold(vm: HomeVM = viewModel()) {
         // I replaced if statement with when statement to hook profile
     ) { pad ->
         when (tab) {
-            0 -> HomeContent(pad, vm, query, onQuery = { query = it })
+            0 -> HomeContent(
+                pad = pad,
+                vm = vm,
+                onAvatarClick = { tab = 2 }
+            )
             1 -> com.griffith.TimelineScreen(pad, vm)
             2 -> com.griffith.ProfileScreen(pad)
         }
     }
+
 }
 
 @Composable
 private fun HomeContent(
+
     pad: PaddingValues,
     vm: HomeVM,
-    query: String,
-    onQuery: (String) -> Unit
+    onAvatarClick: () -> Unit
 ) {
-    val dishes by vm.all.collectAsState(emptyList())
+
+    val query by vm.query.collectAsState()
+    val dishes by vm.filtered.collectAsState(emptyList())
 
     Column(
         Modifier.padding(pad).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        SearchBar(query, onQuery, onSearch = { }, onFilter = { })
+        SearchHeader(
+            query = query,
+            onQueryChange = { vm.setQuery(it) },
+            onAvatarClick = onAvatarClick
+        )
+
         Text("Meal Categories", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             MealCategoryCircle("Breakfast") { }
@@ -193,6 +206,8 @@ private fun HomeContent(
 
 @Composable
 private fun Section(title: String, data: List<Dish>, onOpen: (Dish) -> Unit) {
+
+
     Text(title, style = MaterialTheme.typography.titleMedium)
     LazyRow {
         items(data.size) { i ->
@@ -210,6 +225,25 @@ class HomeVM : ViewModel() {
     val recent = repo.recent(10)
     val top = repo.top(10)
     val forgotten = repo.forgotten(4, System.currentTimeMillis() - 60L * 24 * 60 * 60 * 1000, 10)
+
+    // search text
+    private val q = MutableStateFlow("")
+    val query: StateFlow<String> = q
+
+    fun setQuery(s: String) {
+        q.value = s
+    }
+
+    // filtered list for home grid
+    val filtered = combine(all, q) { list, query ->
+        val t = query.trim()
+        if (t.isBlank()) list
+        else list.filter {
+            it.dishName.contains(t, ignoreCase = true) ||
+                    (it.cuisine ?: "").contains(t, ignoreCase = true) ||
+                    (it.mealType ?: "").contains(t, ignoreCase = true)
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -234,3 +268,4 @@ class HomeVM : ViewModel() {
         )
     }
 }
+

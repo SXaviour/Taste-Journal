@@ -32,6 +32,9 @@ fun TimelineScreen(pad: PaddingValues, vm: HomeVM) {
             color = MaterialTheme.colorScheme.onBackground
         )
 
+        Spacer(Modifier.height(12.dp))
+
+
         TimelineSection(
             title = "Top Rated",
             data = top,

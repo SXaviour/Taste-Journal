@@ -15,10 +15,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -109,42 +112,67 @@ private fun HomeScaffold(vm: HomeVM = viewModel()) {
     var query by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = {
-                Row {
-                    Text(if (tab == 0) "Home" else if (tab == 1) "Timeline" else "Profile")
-                }
-            })
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { vm.launchAdd() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ) {
-                Text("+")
 
-            }
+        floatingActionButton = {
+            if (tab == 0) {
+                FloatingActionButton(
+                    onClick = { vm.launchAdd() },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
+
+                        Text("+")
+
+                    }
+                }
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.onBackground
+            ) {
                 NavigationBarItem(
                     selected = tab == 0,
                     onClick = { tab = 0 },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text("Home") }
+                    label = { Text("Home")
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        unselectedTextColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    )
+
                 )
                 NavigationBarItem(
                     selected = tab == 1,
                     onClick = { tab = 1 },
-                    icon = { Text("⚡") },
-                    label = { Text("Timeline") }
+                    icon = { Icon(Icons.Default.History, contentDescription = null) },
+                    label = { Text("Timeline") },
+
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        unselectedTextColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    )
                 )
                 NavigationBarItem(
                     selected = tab == 2,
                     onClick = { tab = 2},
-                    icon = { Text("👤") },
-                    label = { Text("Profile") }
+                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    label = { Text("Profile") },
+
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        unselectedTextColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    )
                 )
             }
         }
@@ -175,9 +203,19 @@ private fun HomeContent(
     val dishes by vm.filtered.collectAsState(emptyList())
 
     Column(
-        Modifier.padding(pad).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier
+            .padding(pad)
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
+
+        Text(
+            "Home",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
         SearchHeader(
             query = query,
             onQueryChange = { vm.setQuery(it) },

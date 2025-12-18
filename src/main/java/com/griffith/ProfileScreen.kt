@@ -71,6 +71,11 @@ fun ProfileScreen(pad: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
+        Text(
+            "Profile",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground
+        )
 
         Surface(
             shape = RoundedCornerShape(14.dp),
